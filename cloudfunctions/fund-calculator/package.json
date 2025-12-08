@@ -1,0 +1,11 @@
+{
+  "name": "fund-calculator",
+  "version": "1.0.0",
+  "description": "基金核心指标计算器",
+  "main": "index.js",
+  "dependencies": {
+    "dayjs": "^1.11.7",
+    "decimal.js": "^10.4.3",
+    "wx-server-sdk": "~2.6.3"
+  }
+}

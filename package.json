@@ -1,0 +1,26 @@
+{
+  "name": "FundDashboard",
+  "version": "1.0.0",
+  "description": "这是云开发的快速启动指引，其中演示了如何上手使用云开发的三大基础能力：",
+  "main": "index.js",
+  "scripts": {
+    "dev": "gulp",
+    "build": "gulp style",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vant/weapp": "^1.11.7",
+    "miniprogram-computed": "^7.1.0",
+    "miniprogram-recycle-view": "^0.1.5"
+  },
+  "devDependencies": {
+    "gulp": "^5.0.1",
+    "gulp-postcss": "^10.0.0",
+    "postcss": "^8.5.6",
+    "unocss": "^66.5.10",
+    "unocss-preset-weapp": "^66.0.2"
+  }
+}

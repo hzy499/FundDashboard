@@ -1,0 +1,23 @@
+# 依赖包 (太大，不要上传)
+node_modules/
+**/node_modules/
+
+# 微信开发者工具构建产物 (可以重新构建生成的)
+miniprogram_npm/
+
+# 系统生成的杂项
+.DS_Store
+Thumbs.db
+
+# 个人配置 (包含你的环境ID等隐私，如果不想公开)
+project.private.config.json
+
+# 编辑器配置
+.vscode/
+.idea/
+
+# Gulp 临时文件
+dist/
+
+# Log 日志
+npm-debug.log*

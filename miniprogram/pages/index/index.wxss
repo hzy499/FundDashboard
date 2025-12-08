@@ -1,0 +1,130 @@
+/** index.wxss **/
+page {
+  background-color: #f5f7fa;
+  padding-bottom: 40rpx;
+}
+
+.container {
+  padding: 20rpx;
+}
+
+/* 资产卡片 */
+.asset-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 20rpx;
+  padding: 40rpx;
+  color: #fff;
+  box-shadow: 0 8rpx 20rpx rgba(37, 99, 235, 0.3);
+  margin-bottom: 30rpx;
+}
+
+.asset-title {
+  font-size: 28rpx;
+  opacity: 0.9;
+}
+
+.asset-value {
+  font-size: 64rpx;
+  font-weight: bold;
+  margin: 10rpx 0 30rpx;
+}
+
+.asset-row {
+  display: flex;
+  justify-content: space-between;
+  border-top: 1rpx solid rgba(255, 255, 255, 0.2);
+  padding-top: 20rpx;
+}
+
+.asset-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.asset-item .label {
+  font-size: 24rpx;
+  opacity: 0.8;
+  margin-bottom: 6rpx;
+}
+
+.asset-item .value {
+  font-size: 32rpx;
+  font-weight: bold;
+}
+
+/* 列表部分 */
+.section-title {
+  display: flex;
+  justify-content: space-between;
+  font-size: 34rpx;
+  font-weight: bold;
+  margin-bottom: 20rpx;
+  color: #333;
+  padding: 0 10rpx;
+}
+
+.refresh-btn {
+  font-size: 26rpx;
+  color: #3b82f6;
+  font-weight: normal;
+}
+
+.fund-item {
+  background: #fff;
+  border-radius: 16rpx;
+  padding: 30rpx;
+  margin-bottom: 20rpx;
+  box-shadow: 0 2rpx 10rpx rgba(0, 0, 0, 0.05);
+}
+
+.fund-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24rpx;
+  border-bottom: 1rpx solid #f0f0f0;
+  padding-bottom: 16rpx;
+}
+
+.fund-name {
+  font-size: 32rpx;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.fund-code {
+  font-size: 24rpx;
+  color: #9ca3af;
+  background: #f3f4f6;
+  padding: 4rpx 12rpx;
+  border-radius: 8rpx;
+}
+
+.fund-metrics {
+  display: flex;
+  justify-content: space-between;
+}
+
+.metric-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 33%;
+}
+
+.sub-label {
+  font-size: 24rpx;
+  color: #6b7280;
+  margin-bottom: 8rpx;
+}
+
+.sub-val {
+  font-size: 30rpx;
+  font-weight: 500;
+  color: #111827;
+}
+
+/* 红涨绿跌工具类 */
+.red { color: #ef4444 !important; }
+.green { color: #10b981 !important; }
+.empty-tip { text-align: center; color: #999; margin-top: 100rpx; }
