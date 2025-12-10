@@ -1,4 +1,8 @@
 @import "./uno.wxss";
+
+/* 强制引入 Vant 的本地图标字体，取代 CDN */
+/* @import "/miniprogram_npm/@vant/weapp/common/style/icon.wxss"; */
+
 /**app.wxss**/
 .container {
   display: flex;
@@ -25,4 +29,9 @@ page {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
+}
+/* 让数字显示为等宽字体，对齐更整齐 */
+.font-nums {
+  font-feature-settings: "tnum";
+  font-variant-numeric: tabular-nums;
 }

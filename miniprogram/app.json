@@ -1,11 +1,11 @@
 {
   "pages": [
-    "pages/index/index",       
-    "pages/transactions/index" 
+    "pages/index/index",
+    "pages/transactions/index"
   ],
   "window": {
     "backgroundTextStyle": "light",
-    "navigationBarBackgroundColor": "#1989fa", 
+    "navigationBarBackgroundColor": "#1989fa",
     "navigationBarTitleText": "小鱼养基",
     "navigationBarTextStyle": "white",
     "backgroundColor": "#f7f8fa"
