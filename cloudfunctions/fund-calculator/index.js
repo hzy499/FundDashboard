@@ -74,12 +74,19 @@ exports.main = async (event, context) => {
       const currentPrice = safeNum(marketInfo.price);
       const costPrice = safeNum(fund.avg_cost);
       const shares = safeNum(fund.total_shares);
+      const dailyPercentVal = parseFloat(marketInfo.percent); // 获取涨跌幅数值
 
       // 计算：市值、成本、收益
       const marketValue = shares.times(currentPrice);
       const costValue = shares.times(costPrice);
       const profit = marketValue.minus(costValue);
       const returnRate = costValue.isZero() ? new Decimal(0) : profit.div(costValue).times(100);
+
+      let dailyProfit = new Decimal(0);
+      if (dailyPercentVal !== 0) {
+          const lastDayValue = marketValue.div(1 + dailyPercentVal / 100);
+          dailyProfit = marketValue.minus(lastDayValue);
+      }
 
       // 累加总数
       totalAssets = totalAssets.plus(marketValue);
@@ -99,13 +106,14 @@ exports.main = async (event, context) => {
         name,
         type,
         shares: fund.total_shares.toFixed(2),
-        cost: fund.avg_cost.toFixed(4),
-        price: currentPrice.toFixed(4),
-        dailyPercent: marketInfo.percent,
-        marketValue: marketValue.toFixed(2),
-        profit: profit.toFixed(2),
-        returnRate: returnRate.toFixed(2) + '%',
-        isGain: profit.greaterThanOrEqualTo(0),
+        // === 关键数据格式化 ===
+        marketValue: marketValue.toFixed(2),      // 市值
+        dailyPercent: dailyPercentVal.toFixed(2), // 当日涨幅 %
+        dailyProfit: dailyProfit.toFixed(2),      // 当日收益 $ (新增)
+        profit: profit.toFixed(2),                // 持有收益 $
+        returnRate: returnRate.toFixed(2),        // 持有收益率 %
+        isGain: profit.greaterThanOrEqualTo(0),   // 总收益颜色
+        isDailyGain: dailyPercentVal >= 0,        // 当日颜色 (新增)
         updateTime: marketInfo.date
       };
     });

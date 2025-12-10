@@ -123,5 +123,12 @@ Page({
       });
       this.setData({ isLoading: false });
     }
+  },
+  // 跳转到交易详情页
+  onToDetail(e) {
+    const code = e.currentTarget.dataset.code;
+    wx.navigateTo({
+      url: `/pages/transactions/index?code=${code}`,
+    });
   }
 });
