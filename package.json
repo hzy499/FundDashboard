@@ -23,7 +23,7 @@
     "gulp": "^4.0.2",
     "gulp-postcss": "^9.0.0",
     "postcss": "^8.4.38",
-    "unocss": "^0.58.0",
+    "unocss": "^66.5.10",
     "unocss-preset-weapp": "^0.58.0"
   }
 }
