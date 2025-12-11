@@ -1,103 +1,55 @@
-<view class="min-h-screen bg-[#f5f6f8] pb-safe">
+<view class="min-h-screen bg-[#f5f6f8] flex flex-col h-screen overflow-hidden">
 
-<view class="relative z-10 px-4 pt-4">
-  <view class="relative overflow-hidden bg-gradient-to-br from-[#2b6cb0] to-[#4299e1] text-white p-6 rounded-2xl shadow-xl shadow-blue-200/50">
-    
-    <view class="absolute -top-10 -right-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></view>
-    <view class="absolute bottom-0 left-0 w-20 h-20 bg-white opacity-5 rounded-full blur-xl"></view>
-
-    <view class="flex flex-col items-center mb-8 relative z-10">
-      <view class="text-xs text-blue-100 mb-2 tracking-widest uppercase opacity-80">总资产 (元)</view>
-      <view class="text-5xl font-bold tracking-tighter drop-shadow-sm font-nums">{{ totalAssets }}</view>
-    </view>
-    
-    <view class="flex justify-between items-center relative z-10">
-      <view class="flex-1 flex flex-col items-center">
-        <view class="text-xs text-blue-100 mb-1 opacity-80">累计收益</view>
-        <view class="text-lg font-bold font-nums {{ isGain ? 'text-red-100' : 'text-green-100' }}">
-          {{ totalProfit }}
+  <view class="flex-none">
+    <view class="relative z-10 px-4 pt-4">
+      <view
+        class="relative overflow-hidden bg-gradient-to-br from-[#2b6cb0] to-[#4299e1] text-white p-6 rounded-2xl shadow-xl shadow-blue-200/50">
+        <view class="flex flex-col items-center mb-8 relative z-10">
+          <view class="text-xs text-blue-100 mb-2 tracking-widest uppercase opacity-80">总资产 (元)</view>
+          <view class="text-5xl font-bold tracking-tighter drop-shadow-sm font-nums">{{ totalAssets }}</view>
         </view>
       </view>
-      
-      <view class="w-[1px] h-8 bg-white opacity-20"></view> 
+    </view>
 
-      <view class="flex-1 flex flex-col items-center">
-        <view class="text-xs text-blue-100 mb-1 opacity-80">持有收益率</view>
-        <view class="text-lg font-bold font-nums">{{ totalReturnRate }}</view>
+    <view class="mx-4 mt-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-50">
+      <view class="w-full h-48">
+        <ec-canvas id="mychart-dom-pie" canvas-id="mychart-pie" ec="{{ ec }}"></ec-canvas>
       </view>
     </view>
-  </view>
-</view>
 
-<view class="mx-4 mt-4 p-5 bg-white rounded-2xl shadow-sm border border-gray-50">
-  <view class="flex justify-between items-center mb-4 border-b border-gray-100 pb-3">
-    <view class="text-base font-bold text-gray-800 flex items-center">
-      <view class="w-1 h-4 bg-[#2b6cb0] mr-2 rounded-full"></view>
-      资产分布
-    </view>
-    <view class="text-[20rpx] text-gray-400 bg-gray-50 px-2 py-1 rounded-lg flex items-center border border-gray-100">
-      <view class="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5 animate-pulse"></view>
-      更新于 {{ fundList[0].updateTime }}
-    </view>
+    <view class="px-5 mt-6 mb-2 text-sm font-bold text-gray-500">持仓列表 ({{ fundList.length || 0 }})</view>
   </view>
-  <view class="w-full h-48">
-    <ec-canvas id="mychart-dom-pie" canvas-id="mychart-pie" ec="{{ ec }}"></ec-canvas>
-  </view>
-</view>
 
-<view class="px-4 mt-4">
-  <van-skeleton title row="3" loading="{{ isLoading }}">
-    <block wx:for="{{ fundList }}" wx:key="code">
-      <view 
-        class="bg-white rounded-2xl shadow-sm mb-3 overflow-hidden active:scale-[0.98] transition-all duration-200 border border-gray-50"
-        bindtap="onToDetail" 
-        data-code="{{item.code}}"
-      >
+  <recycle-view class="flex-1" batch="{{batchSetRecycleData}}" id="recycleId" bindscrolltolower="loadMore">
+    <recycle-item wx:for="{{recycleList}}" wx:key="code">
+      <view
+        class="bg-white rounded-2xl shadow-sm mx-4 mb-3 overflow-hidden active:scale-[0.98] transition-all duration-200 border border-gray-50"
+        bindtap="onToDetail" data-code="{{item.code}}">
         <view class="px-4 py-3 flex justify-between items-center bg-gray-50/50 border-b border-gray-100">
           <view class="flex items-center gap-2 flex-1 overflow-hidden">
-             <view class="text-[20rpx] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium border border-blue-100 shrink-0">
-               {{item.type}}
-             </view>
-             <view class="font-bold text-sm text-gray-800 truncate">{{ item.name }}</view>
+            <view
+              class="text-[20rpx] px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 font-medium border border-blue-100 shrink-0">
+              {{item.type}}
+            </view>
+            <view class="font-bold text-sm text-gray-800 truncate">{{ item.name }}</view>
           </view>
           <van-icon name="arrow" color="#cbd5e1" size="14px" />
         </view>
 
         <view class="p-4 grid grid-cols-4 gap-2">
-          
           <view class="flex flex-col items-center justify-center">
             <text class="text-[20rpx] text-gray-400 mb-1">当日涨幅</text>
             <text class="font-bold text-sm font-nums {{ item.isDailyGain ? 'text-[#ff4d4f]' : 'text-[#22c55e]' }}">
               {{ item.isDailyGain ? '+' : ''}}{{ item.dailyPercent }}%
             </text>
           </view>
-
-          <view class="flex flex-col items-center justify-center border-l border-gray-100">
-            <text class="text-[20rpx] text-gray-400 mb-1">当日收益</text>
-            <text class="font-bold text-sm font-nums {{ item.isDailyGain ? 'text-[#ff4d4f]' : 'text-[#22c55e]' }}">
-              {{ item.dailyProfit }}
-            </text>
-          </view>
-
-          <view class="flex flex-col items-center justify-center border-l border-gray-100">
-            <text class="text-[20rpx] text-gray-400 mb-1">持有收益</text>
-            <text class="font-bold text-sm font-nums {{ item.isGain ? 'text-[#ff4d4f]' : 'text-[#22c55e]' }}">
-              {{ item.profit }}
-            </text>
-          </view>
-
-          <view class="flex flex-col items-center justify-center border-l border-gray-100">
-            <text class="text-[20rpx] text-gray-400 mb-1">持有率</text>
-            <text class="font-bold text-sm font-nums {{ item.isGain ? 'text-[#ff4d4f]' : 'text-[#22c55e]' }}">
-              {{ item.returnRate }}%
-            </text>
-          </view>
-
         </view>
       </view>
-    </block>
-  </van-skeleton>
-</view>
+    </recycle-item>
 
-<view class="h-10"></view>
+    <view slot="after" class="py-4 flex justify-center">
+      <van-loading size="24px" wx:if="{{isLoading}}">加载中...</van-loading>
+    </view>
+  </recycle-view>
+
 </view>

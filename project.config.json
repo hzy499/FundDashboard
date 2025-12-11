@@ -1,6 +1,7 @@
 {
   "miniprogramRoot": "miniprogram/",
   "compileType": "miniprogram",
+  "cloudfunctionRoot": "cloudfunctions/",
   "appid": "wxefc506b72077b691",
   "projectname": "FundDashboard",
   "description": "项目配置文件",

@@ -1,161 +1,606 @@
+// 引入 ECharts (确保路径正确，指向你复制进去的 components 文件夹)
+
+import * as echarts from '../../components/ec-canvas/echarts';
+
+
+
+const computedBehavior = require('miniprogram-computed').behavior;
+
+
+
+Page({
+
+  behaviors: [computedBehavior],
+
+
+
+  data: {
+
+    ec: {
+
+      lazyLoad: true // 延迟加载，手动初始化
+
+    },
+
+    isLoading: true,
+
+    totalAssets: '0.00',
+
+    totalProfit: '0.00',
+
+    totalReturnRate: '0.00%',
+
+    isGain: false,
+
+    fundList: [],
+
+  },
+
+
+
+  computed: {
+
+    headerClass(data) {
+
+      return data.isGain ? 'bg-red-500' : 'bg-green-500';
+
+    }
+
+  },
+
+
+
+  onLoad: function () {
+
+    this.refreshData();
+
+  },
+
+
+
+  onPullDownRefresh: function () {
+
+    this.refreshData().then(() => {
+
+      wx.stopPullDownRefresh();
+
+    });
+
+  },
+
+
+
+  // === ECharts 初始化逻辑 ===
+
+  initChart(chartData) {
+
+    if (!chartData || chartData.length === 0) return;
+
+
+
+    this.selectComponent('#mychart-dom-pie').init((canvas, width, height, dpr) => {
+
+      const chart = echarts.init(canvas, null, {
+
+        width: width,
+
+        height: height,
+
+        devicePixelRatio: dpr
+
+      });
+
+
+
+      const option = {
+
+        backgroundColor: "#ffffff",
+
+        color: ['#37A2DA', '#32C5E9', '#67E0E3', '#91F2DE', '#FFDB5C', '#FF9F7F'],
+
+        tooltip: {
+
+          trigger: 'item',
+
+          formatter: '{b}: {c} ({d}%)' // 显示名称、数值、百分比
+
+        },
+
+        legend: {
+
+          bottom: 0,
+
+          left: 'center',
+
+          itemWidth: 10,
+
+          itemHeight: 10
+
+        },
+
+        series: [{
+
+          name: '资产分布',
+
+          type: 'pie',
+
+          radius: ['40%', '60%'], // 环形图效果
+
+          center: ['50%', '40%'], // 稍微向上调整，留出空间给 Legend
+
+          avoidLabelOverlap: false,
+
+          label: {
+
+            show: false,
+
+            position: 'center'
+
+          },
+
+          emphasis: {
+
+            label: {
+
+              show: true,
+
+              fontSize: '16',
+
+              fontWeight: 'bold'
+
+            }
+
+          },
+
+          data: chartData
+
+        }]
+
+      };
+
+
+
+      chart.setOption(option);
+
+      return chart;
+
+    });
+
+  },
+
+
+
+  refreshData: async function () {
+
+    this.setData({
+      isLoading: true
+    });
+
+
+
+    try {
+
+      // 调用云函数 (fund-calculator 已经升级为读取数据库)
+
+      const {
+        result
+      } = await wx.cloud.callFunction({
+
+        name: 'fund-calculator'
+
+      });
+
+
+
+      // 错误处理
+
+      if (result.error) {
+
+        throw new Error(result.error);
+
+      }
+
+
+
+      console.log('云函数数据:', result);
+
+
+
+      // 更新页面数据
+
+      this.setData({
+
+        fundList: result.dashboardData,
+
+        totalAssets: result.summary.totalAssets,
+
+        totalProfit: result.summary.totalProfit,
+
+        totalReturnRate: result.summary.totalReturnRate,
+
+        isGain: result.summary.isGain,
+
+        isLoading: false
+
+      });
+
+
+
+      // 核心：渲染图表 (如果有图表数据)
+
+      if (result.charts && result.charts.pie) {
+
+        this.initChart(result.charts.pie);
+
+      }
+
+
+
+    } catch (err) {
+
+      console.error('获取数据失败', err);
+
+      wx.showToast({
+
+        title: '刷新失败',
+
+        icon: 'none'
+
+      });
+
+      this.setData({
+        isLoading: false
+      });
+
+    }
+
+  },
+
+  // 跳转到交易详情页
+
+  onToDetail(e) {
+
+    const code = e.currentTarget.dataset.code;
+
+    wx.navigateTo({
+
+      url: `/pages/transactions/index?code=${code}`,
+
+    });
+
+  }
+
+});
+
 // cloudfunctions/fund-calculator/index.js
+
 const cloud = require('wx-server-sdk');
+
 const Decimal = require('decimal.js');
+
 const dayjs = require('dayjs');
 
-cloud.init({ env: cloud.DYNAMIC_CURRENT_ENV });
+
+
+cloud.init({
+  env: cloud.DYNAMIC_CURRENT_ENV
+});
+
 const db = cloud.database();
+
 const _ = db.command;
 
+
+
 // 1. 模拟获取实时行情 (替代 Python 的 akshare)
+
 // 真实场景中，这里会调用第三方财经 API
+
 async function fetchMarketData(codes) {
+
   const marketMap = {};
+
   codes.forEach(code => {
+
     // 模拟波动：随机生成 -2% 到 +2% 之间的涨跌
+
     const randomFluctuation = (Math.random() * 0.04 - 0.02);
+
     // 假设基准净值为 1.5 (仅演示用)
+
     const mockPrice = 1.5 * (1 + randomFluctuation);
 
+
+
     marketMap[code] = {
+
       price: mockPrice, // 实时净值
+
       percent: (randomFluctuation * 100).toFixed(2), // 涨跌幅
+
       date: dayjs().format('YYYY-MM-DD')
+
     };
+
   });
+
   return marketMap;
+
 }
 
+
+
 // 辅助函数：安全转数字
+
 const safeNum = (val) => new Decimal(val || 0);
 
+
+
 exports.main = async (event, context) => {
+
   try {
+
     // === 第一步：从数据库拉取持仓 ===
+
     // 使用聚合查询 (Aggregate) 将持仓表(user_portfolio)与基础信息表(fund_basic)关联
+
     const fundsRes = await db.collection('user_portfolio')
+
       .aggregate()
+
       .lookup({
+
         from: 'fund_basic',
+
         localField: 'fund_code',
+
         foreignField: '_id',
+
         as: 'basic_info'
+
       })
+
       .limit(100)
+
       .end();
+
+
 
     const funds = fundsRes.list;
 
+
+
     if (funds.length === 0) {
-      return { totalAssets: '0.00', dashboardData: [], charts: {} };
-    }
-
-    // === 第二步：获取行情 ===
-    const codes = funds.map(f => f.fund_code);
-    const marketData = await fetchMarketData(codes);
-
-    // === 第三步：核心指标计算 ===
-    let totalAssets = new Decimal(0);
-    let totalProfit = new Decimal(0);
-    let totalCost = new Decimal(0);
-
-    // 用于饼图统计：{ "混合型": 5000, "股票型": 3000 }
-    const typeAllocation = {};
-
-    const dashboardData = funds.map(fund => {
-      // 解构关联查询出的元数据
-      const info = fund.basic_info[0] || {};
-      const name = info.name || '未知基金';
-      const type = info.type || '其他';
-      const code = fund.fund_code;
-
-      // 获取价格
-      const marketInfo = marketData[code] || { price: fund.avg_cost, percent: 0 };
-      const currentPrice = safeNum(marketInfo.price);
-      const costPrice = safeNum(fund.avg_cost);
-      const shares = safeNum(fund.total_shares);
-      const dailyPercentVal = parseFloat(marketInfo.percent); // 获取涨跌幅数值
-
-      // 计算：市值、成本、收益
-      const marketValue = shares.times(currentPrice);
-      const costValue = shares.times(costPrice);
-      const profit = marketValue.minus(costValue);
-      const returnRate = costValue.isZero() ? new Decimal(0) : profit.div(costValue).times(100);
-
-      let dailyProfit = new Decimal(0);
-      if (dailyPercentVal !== 0) {
-          const lastDayValue = marketValue.div(1 + dailyPercentVal / 100);
-          dailyProfit = marketValue.minus(lastDayValue);
-      }
-
-      // 累加总数
-      totalAssets = totalAssets.plus(marketValue);
-      totalProfit = totalProfit.plus(profit);
-      totalCost = totalCost.plus(costValue);
-
-      // 统计资产分布 (Pie Chart Data)
-      const valFloat = parseFloat(marketValue.toFixed(2));
-      if (typeAllocation[type]) {
-        typeAllocation[type] += valFloat;
-      } else {
-        typeAllocation[type] = valFloat;
-      }
 
       return {
-        code,
-        name,
-        type,
-        shares: fund.total_shares.toFixed(2),
-        // === 关键数据格式化 ===
-        marketValue: marketValue.toFixed(2),      // 市值
-        dailyPercent: dailyPercentVal.toFixed(2), // 当日涨幅 %
-        dailyProfit: dailyProfit.toFixed(2),      // 当日收益 $ (新增)
-        profit: profit.toFixed(2),                // 持有收益 $
-        returnRate: returnRate.toFixed(2),        // 持有收益率 %
-        isGain: profit.greaterThanOrEqualTo(0),   // 总收益颜色
-        isDailyGain: dailyPercentVal >= 0,        // 当日颜色 (新增)
-        updateTime: marketInfo.date
+        totalAssets: '0.00',
+        dashboardData: [],
+        charts: {}
       };
+
+    }
+
+
+
+    // === 第二步：获取行情 ===
+
+    const codes = funds.map(f => f.fund_code);
+
+    const marketData = await fetchMarketData(codes);
+
+
+
+    // === 第三步：核心指标计算 ===
+
+    let totalAssets = new Decimal(0);
+
+    let totalProfit = new Decimal(0);
+
+    let totalCost = new Decimal(0);
+
+
+
+    // 用于饼图统计：{ "混合型": 5000, "股票型": 3000 }
+
+    const typeAllocation = {};
+
+
+
+    const dashboardData = funds.map(fund => {
+
+      // 解构关联查询出的元数据
+
+      const info = fund.basic_info[0] || {};
+
+      const name = info.name || '未知基金';
+
+      const type = info.type || '其他';
+
+      const code = fund.fund_code;
+
+
+
+      // 获取价格
+
+      const marketInfo = marketData[code] || {
+        price: fund.avg_cost,
+        percent: 0
+      };
+
+      const currentPrice = safeNum(marketInfo.price);
+
+      const costPrice = safeNum(fund.avg_cost);
+
+      const shares = safeNum(fund.total_shares);
+
+      const dailyPercentVal = parseFloat(marketInfo.percent); // 获取涨跌幅数值
+
+
+
+      // 计算：市值、成本、收益
+
+      const marketValue = shares.times(currentPrice);
+
+      const costValue = shares.times(costPrice);
+
+      const profit = marketValue.minus(costValue);
+
+      const returnRate = costValue.isZero() ? new Decimal(0) : profit.div(costValue).times(100);
+
+
+
+      let dailyProfit = new Decimal(0);
+
+      if (dailyPercentVal !== 0) {
+
+        const lastDayValue = marketValue.div(1 + dailyPercentVal / 100);
+
+        dailyProfit = marketValue.minus(lastDayValue);
+
+      }
+
+
+
+      // 累加总数
+
+      totalAssets = totalAssets.plus(marketValue);
+
+      totalProfit = totalProfit.plus(profit);
+
+      totalCost = totalCost.plus(costValue);
+
+
+
+      // 统计资产分布 (Pie Chart Data)
+
+      const valFloat = parseFloat(marketValue.toFixed(2));
+
+      if (typeAllocation[type]) {
+
+        typeAllocation[type] += valFloat;
+
+      } else {
+
+        typeAllocation[type] = valFloat;
+
+      }
+
+
+
+      return {
+
+        code,
+
+        name,
+
+        type,
+
+        shares: fund.total_shares.toFixed(2),
+
+        // === 关键数据格式化 ===
+
+        marketValue: marketValue.toFixed(2), // 市值
+
+        dailyPercent: dailyPercentVal.toFixed(2), // 当日涨幅 %
+
+        dailyProfit: dailyProfit.toFixed(2), // 当日收益 $ (新增)
+
+        profit: profit.toFixed(2), // 持有收益 $
+
+        returnRate: returnRate.toFixed(2), // 持有收益率 %
+
+        isGain: profit.greaterThanOrEqualTo(0), // 总收益颜色
+
+        isDailyGain: dailyPercentVal >= 0, // 当日颜色 (新增)
+
+        updateTime: marketInfo.date
+
+      };
+
     });
 
+
+
     // === 第四步：封装图表数据 ===
-    
+
+
+
     // 1. 饼图数据格式化 (适配 ECharts)
+
     const pieChartData = Object.keys(typeAllocation).map(key => ({
+
       name: key,
+
       value: parseFloat(typeAllocation[key].toFixed(2))
+
     }));
 
+
+
     // 2. (可选) 模拟7日收益走势
+
     const lineChartData = {
+
       dates: [],
+
       values: []
+
     };
-    for(let i=6; i>=0; i--) {
+
+    for (let i = 6; i >= 0; i--) {
+
       lineChartData.dates.push(dayjs().subtract(i, 'day').format('MM-DD'));
+
       // 模拟一点波动
+
       const mockVal = parseFloat(totalAssets.toFixed(2)) * (1 - i * 0.005);
+
       lineChartData.values.push(mockVal.toFixed(2));
+
     }
+
+
 
     const totalReturnRate = totalCost.isZero() ? '0.00' : totalProfit.div(totalCost).times(100).toFixed(2);
 
+
+
     return {
+
       dashboardData,
+
       summary: {
+
         totalAssets: totalAssets.toFixed(2),
+
         totalProfit: totalProfit.toFixed(2),
+
         totalReturnRate: totalReturnRate + '%',
+
         isGain: totalProfit.greaterThanOrEqualTo(0)
+
       },
+
       charts: {
+
         pie: pieChartData,
+
         line: lineChartData
+
       }
+
     };
 
+
+
   } catch (err) {
+
     console.error(err);
-    return { error: err.message };
+
+    return {
+      error: err.message
+    };
+
   }
+
 };
